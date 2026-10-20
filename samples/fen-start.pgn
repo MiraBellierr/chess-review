@@ -1,0 +1,12 @@
+[Event "Parity test"]
+[Site "Local"]
+[Date "2026.10.18"]
+[Round "-"]
+[White "White Player"]
+[Black "Black Player"]
+[Result "1-0"]
+[FEN "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"]
+[SetUp "1"]
+
+2... Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. d3 b5 7. Bb3 d6 8. Nc3 O-O
+9. Bg5 h6 10. Bh4 Re8 11. Nd5 Nxd5 12. Bxd5 Qd7 13. Bxe7 Rxe7 1-0

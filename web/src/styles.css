@@ -1,0 +1,1612 @@
+/* Chess Review — "Paper Review"
+   A warm editorial world for an annotated scorebook: cream paper, white plates,
+   ink text, one amber accent, and a printed-diagram board (ivory / olive).
+   Colour never carries meaning alone — move labels are drawn symbols, board
+   sides are solid vs outline pieces, and every datum is labelled in text.
+
+   Fraunces (self-hosted, OFL-1.1) carries the display voice; the sans and the
+   mono stay on system stacks. Nothing is fetched from the network at runtime. */
+
+/* Fraunces — a soft high-contrast old-style with magazine bearing.
+   Latin + Latin-Extended subsets; one variable file carries 400–700. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/fraunces-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/fraunces-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/fraunces-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/fraunces-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  color-scheme: light;
+
+  /* paper */
+  --paper: #f7f5ef;
+  --card: #ffffff;
+  --parch: #f1ebdb;
+  --wash: #f6f1e6;
+
+  /* rules */
+  --rule: #d5cbb8;
+  --rule-soft: #e7e0d2;
+  --rule-strong: #c2b7a2;
+
+  /* ink */
+  --ink: #1f2933;
+  --ink-2: #3f4a56;
+  --muted: #5b564c;
+
+  /* accent */
+  --accent: #b45309;
+  --accent-deep: #78350f;
+  --accent-wash: #f3e3c7;
+  --danger: #7f1d1d;
+  --danger-wash: #fbe9e7;
+
+  /* board */
+  --sq-light: #f0e2c8;
+  --sq-dark: #7a8b6f;
+  /* Last-move / selection washes. Translucent gold rather than another parchment
+     tint, so the highlight reads on both square colours and can't be mistaken
+     for a bare light square. */
+  --hl-last: rgba(214, 152, 26, 0.55);
+  --hl-select: rgba(214, 152, 26, 0.3);
+  --piece-face: #fffcf4;
+  --piece-dark: #46525f;
+  --notation-ink: #171d24;
+
+  /* type */
+  --font-serif: 'Fraunces', Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  --font-sans: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Cascadia Mono', Consolas, ui-monospace, 'Liberation Mono', monospace;
+
+  --radius-card: 12px;
+  --radius-ctl: 8px;
+  --radius-chip: 5px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-wash);
+  color: var(--ink);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 6px;
+  border: 2px solid var(--paper);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rule-strong);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.ul,
+.review-meta a,
+.field .hint a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--rule-strong);
+}
+a.ul:hover,
+.review-meta a:hover,
+.field .hint a:hover {
+  text-decoration-color: var(--accent-deep);
+}
+
+code {
+  background: var(--parch);
+  border: 1px solid var(--rule-soft);
+  padding: 0 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+}
+
+/* ------------------------------------------------------------- type ------ */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-serif);
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 26px 0 10px;
+}
+
+h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 20px 0 8px;
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 16px 0 6px;
+}
+
+.prose {
+  max-width: 70ch;
+}
+
+.mono,
+.mv-san,
+.mv-no,
+.mv-clock,
+.mv-acc,
+.explorer-san,
+.engine-line .score,
+.engine-line .san,
+.fig-move,
+.fig-swing,
+.ply-count,
+.depth-value,
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.error-text {
+  color: var(--danger);
+  margin: 10px 0;
+}
+
+.success-text {
+  color: var(--accent-deep);
+  margin: 10px 0;
+}
+
+/* ------------------------------------------------------------ masthead --- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 11px 26px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.brand-mark {
+  width: 27px;
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  color: var(--accent-deep);
+  font-size: 17px;
+  line-height: 1;
+  padding-bottom: 1px;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+.topbar nav a {
+  color: var(--muted);
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.topbar nav a:hover {
+  color: var(--ink);
+  background: var(--wash);
+}
+
+.topbar nav a.active {
+  color: var(--ink);
+  font-weight: 700;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: inset 0 -2px 0 var(--accent-deep);
+}
+
+.engine-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.engine-status .status-icon {
+  color: var(--accent-deep);
+  display: inline-flex;
+}
+.engine-status.offline {
+  color: var(--muted);
+}
+.engine-status.offline .status-icon {
+  color: var(--danger);
+}
+
+.banner {
+  padding: 10px 26px;
+  font-size: 13.5px;
+}
+.banner.warn {
+  background: var(--accent-wash);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------- page ---- */
+
+main {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 26px 26px 72px;
+}
+
+.page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.loading,
+.empty {
+  padding: 56px 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty {
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+.empty h2 {
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+.empty p {
+  margin: 0;
+}
+.empty .btn {
+  margin-top: 18px;
+}
+
+/* ------------------------------------------------------------ buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  padding: 7px 14px;
+  border-radius: var(--radius-ctl);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1.45;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.btn:hover {
+  background: var(--wash);
+  border-color: var(--accent-deep);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btn.primary {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: #fff;
+}
+.btn.primary:hover {
+  background: #602909;
+  border-color: #602909;
+}
+
+.btn.danger:hover {
+  background: var(--danger-wash);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn .ico {
+  display: inline-flex;
+  margin: -1px 0;
+}
+
+/* ------------------------------------------------------------ surfaces --- */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  padding: 13px 16px 14px;
+}
+
+.card + .card {
+  margin-top: 12px;
+}
+
+/* A printed section head: hairline rule, small-caps title, quiet note. */
+.sec {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--rule-soft);
+  padding-top: 8px;
+  margin-bottom: 10px;
+}
+
+.sec h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.sec-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------- tables ---- */
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-card);
+  background: var(--card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--parch);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: middle;
+  color: var(--ink);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr.clickable {
+  cursor: pointer;
+}
+
+.table tr.clickable:hover td,
+.table tr:hover td.row-hover {
+  background: var(--wash);
+}
+
+td.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+td.actions .btn {
+  margin-left: 6px;
+}
+
+.chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--parch);
+  border: 1px solid var(--rule);
+  color: var(--muted);
+}
+
+.result {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------- review head --- */
+
+.review-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.review-players {
+  font-family: var(--font-serif);
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.review-players .vs {
+  color: var(--muted);
+  font-weight: 400;
+  font-style: italic;
+  padding: 0 2px;
+}
+
+.review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.review-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------ layout ----- */
+
+.review-body {
+  display: grid;
+  grid-template-columns: minmax(380px, 520px) minmax(360px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.board-col {
+  position: sticky;
+  top: 74px;
+  min-width: 0;
+}
+
+.side-col {
+  min-width: 0;
+}
+
+/* Page-level panes: two equal tabs over the pane they switch. */
+.tabs.lg.review-tabs {
+  margin: 12px 0;
+}
+
+.review-tabs .tab {
+  flex: 1 1 0;
+  text-align: center;
+}
+
+@media (max-width: 1060px) {
+  .review-body {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .board-col {
+    position: static;
+  }
+}
+
+/* -------------------------------------------------------------- board ---- */
+
+.board-figure {
+  margin: 0;
+}
+
+.board-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.eval-bar {
+  position: relative;
+  width: 22px;
+  flex: none;
+  display: flex;
+  background: var(--parch);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+/* The fill is clipped to the bar's rounded track; the chip is not — it prints
+   its number in full and hangs a few pixels over the page margin and the board
+   gutter, like a pasted label. */
+.eval-bar-clip {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: inherit;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.eval-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px dashed rgba(31, 41, 51, 0.45);
+  pointer-events: none;
+}
+
+.eval-bar-fill {
+  width: 100%;
+  background: var(--ink);
+  transition: height 0.25s ease;
+}
+
+.eval-bar-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+  top: 6px;
+}
+
+.board-holder {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.board-frame {
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.board-badge {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  line-height: 0;
+}
+
+/* The overlay badge seats over any square: a touch larger than the list's sm
+   so the art keeps presence on the board (the art carries its own rim). */
+.board-badge .badge {
+  width: 22px;
+  height: 22px;
+}
+
+.board-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 8px 2px 2px;
+  font-size: 13.5px;
+}
+
+.fig-move {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.fig-swing {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.fig-note {
+  flex: 1 1 100%;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-2);
+  max-width: 60ch;
+}
+
+/* playback controls */
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  border-radius: var(--radius-ctl);
+  width: 36px;
+  height: 33px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.ctrl-btn:hover {
+  background: var(--wash);
+  border-color: var(--accent-deep);
+}
+
+.ctrl-btn.on {
+  background: var(--accent-wash);
+  border-color: var(--accent-deep);
+}
+
+.controls .spacer {
+  flex: 1;
+}
+
+.ply-count {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.engine-lines {
+  margin-top: 10px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-ctl);
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+.engine-line {
+  display: flex;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+.engine-line .score {
+  font-weight: 700;
+  min-width: 52px;
+}
+
+.engine-line .san {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* -------------------------------------------------------- analysis box --- */
+
+.action-box .row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.action-box p {
+  margin: 0 0 4px;
+}
+
+.depth-slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  min-width: 260px;
+  flex: 1;
+}
+
+.depth-slider input[type='range'] {
+  flex: 1;
+  min-width: 120px;
+  accent-color: var(--accent-deep);
+  background: transparent;
+}
+
+.depth-value {
+  font-weight: 700;
+  font-size: 12.5px;
+  min-width: 62px;
+  text-align: right;
+}
+
+.bar {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--parch);
+  border: 1px solid var(--rule-soft);
+  overflow: hidden;
+}
+.bar > div,
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transition: width 0.15s ease;
+}
+
+.progress-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------- scoreboard ---- */
+
+/* One printed ledger: a label column, the two players either side of the mark column. */
+.sum-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.sum-table th,
+.sum-table td {
+  padding: 3.5px 6px;
+  vertical-align: middle;
+}
+
+.sum-col-label {
+  width: 104px;
+}
+
+.sum-col-mark {
+  width: 44px;
+}
+
+.sum-table thead th,
+.sum-table thead td {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: bottom;
+}
+
+.sum-player {
+  text-align: center;
+  font-weight: 400;
+}
+
+.sum-name {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.sum-name .side-mark {
+  display: inline-block;
+  vertical-align: -1px;
+  margin-right: 6px;
+}
+
+.side-mark {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: none;
+}
+.side-mark.white {
+  background: var(--card);
+  border: 2px solid var(--ink);
+}
+.side-mark.black {
+  background: var(--ink);
+  border: 2px solid var(--ink);
+}
+
+.sum-label {
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sum-label-strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.sum-value {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.sum-value.num {
+  font-weight: 700;
+}
+
+.sum-acc {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.sum-icon {
+  text-align: center;
+}
+
+.sum-phase {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.phase-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phase-cell .bar {
+  flex: 1;
+  height: 6px;
+}
+
+.phase-cell .num {
+  min-width: 38px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.sum-rule > * {
+  border-top: 1px solid var(--rule-soft);
+}
+
+.sum-block th {
+  padding: 10px 6px 3px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------- labels ---- */
+
+/* A move's label is a vendored classification badge (WintrChess set, GPL-3.0
+   — see CREDITS.md): the art is its own circle, tone and gloss, so the
+   wrapper is bare — a size box around the image. */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  line-height: 0;
+}
+
+.badge-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.badge-sm {
+  width: 18px;
+  height: 18px;
+}
+.badge-md {
+  width: 22px;
+  height: 22px;
+}
+.badge-lg {
+  width: 27px;
+  height: 27px;
+}
+
+/* ------------------------------------------------------------ movelist -- */
+
+.tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--ink);
+  background: var(--wash);
+}
+
+.tab.active {
+  color: var(--ink);
+  background: var(--accent-wash);
+  border-color: var(--accent-deep);
+}
+
+.tabs.lg {
+  margin-bottom: 18px;
+}
+
+.tabs.lg .tab {
+  font-size: 13px;
+  padding: 6px 13px;
+  border-color: var(--rule);
+  background: var(--card);
+}
+
+.tabs.lg .tab.active {
+  border-color: var(--accent-deep);
+  background: var(--accent-wash);
+}
+
+.moves-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  margin: 0 -6px;
+}
+
+.score {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.score td {
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.score tr:hover td {
+  background: var(--wash);
+}
+
+.score td.sel {
+  background: var(--accent-wash);
+  box-shadow: inset 0 0 0 1px var(--accent-deep);
+}
+
+.mv-no {
+  color: var(--muted);
+  display: inline-block;
+  min-width: 30px;
+  font-size: 12px;
+}
+
+.mv-san {
+  font-weight: 700;
+}
+
+.mv-clock {
+  color: var(--muted);
+  font-size: 11.5px;
+  margin-left: 7px;
+}
+
+/* the explored line — printed under the score, dashed off from the game */
+.alt-line {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule-strong);
+}
+
+.alt-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 6px 4px;
+}
+
+.alt-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+
+.alt-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.alt-back {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 2px;
+}
+
+.alt-back:hover {
+  color: var(--accent-deep);
+  text-decoration-color: var(--accent-deep);
+}
+
+.alt-acc {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.mv-acc {
+  color: var(--muted);
+  font-size: 11.5px;
+  margin-left: 7px;
+}
+
+/* the gap left when the explored line starts on Black's move */
+.mv-gap {
+  color: var(--muted);
+  text-align: center;
+  cursor: default;
+}
+
+.score .badge {
+  margin-right: 7px;
+  vertical-align: -1px;
+}
+
+.pending-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.5;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 0.65;
+  }
+}
+
+/* --------------------------------------------------------------- chart --- */
+
+.graph-wrap {
+  position: relative;
+  height: 122px;
+  background: var(--parch);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.graph-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.graph-marker {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px 0 0 -5px;
+  padding: 0;
+  border: 1.5px solid var(--card);
+  border-radius: 2px;
+  background: var(--accent-deep);
+  transform: rotate(45deg);
+  cursor: pointer;
+  z-index: 3;
+}
+
+.graph-marker:hover {
+  background: var(--ink);
+}
+
+.graph-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ink);
+  opacity: 0.6;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------- annotations -- */
+
+.moments {
+  display: flex;
+  flex-direction: column;
+}
+
+.moment {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule-soft);
+  border-radius: 0;
+  padding: 9px 8px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: background 0.1s ease;
+}
+
+.moment:first-child {
+  border-top: none;
+  padding-top: 2px;
+}
+
+.moment:hover {
+  background: var(--wash);
+}
+
+.moment.sel {
+  background: var(--accent-wash);
+  border-radius: 6px;
+}
+
+.moment-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.moment-move {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.moment-caption {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 66ch;
+}
+
+/* On a wide sheet the notes set two-up and close the spread beside the chart. */
+@media (min-width: 1180px) {
+  .moments {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 30px;
+    align-content: start;
+  }
+  .moment {
+    border-top: none;
+    border-bottom: 1px solid var(--rule-soft);
+    padding: 7px 8px 8px;
+  }
+  .moment:first-child {
+    padding-top: 7px;
+  }
+  .moment:nth-last-child(-n + 2) {
+    border-bottom: none;
+  }
+}
+
+/* ------------------------------------------------------------ explorer --- */
+
+.explorer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.explorer-table td {
+  padding: 5px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.explorer-table tr:hover td {
+  background: var(--wash);
+}
+
+.explorer-san {
+  font-weight: 700;
+}
+
+.wdl-bar {
+  display: flex;
+  height: 7px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--parch);
+  border: 1px solid var(--rule-soft);
+}
+
+.wdl-bar .w {
+  background: #e9dcba;
+}
+.wdl-bar .d {
+  background: #c7bda6;
+}
+.wdl-bar .b {
+  background: var(--ink);
+}
+
+/* --------------------------------------------------------------- forms --- */
+
+.field {
+  margin-bottom: 16px;
+  max-width: 460px;
+}
+
+.field label {
+  display: block;
+  font-weight: 700;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+.field .hint,
+.note {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 5px;
+  max-width: 62ch;
+}
+
+input[type='text'],
+input[type='number'],
+input[type='password'],
+input[type='search'],
+select,
+textarea {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-ctl);
+  color: var(--ink);
+  caret-color: var(--accent-deep);
+  padding: 8px 11px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 1px;
+  border-color: var(--accent-deep);
+}
+
+textarea {
+  min-height: 170px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+input[type='file'] {
+  width: auto;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type='file']::file-selector-button {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-ctl);
+  padding: 6px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+input[type='file']::file-selector-button:hover {
+  background: var(--wash);
+  border-color: var(--accent-deep);
+}
+
+input[type='radio'] {
+  accent-color: var(--accent-deep);
+}
+
+.inline-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: 540px;
+}
+
+.inline-form input {
+  flex: 1;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------ board notation --- */
+
+[data-boardid='review-board'] {
+  font-family: var(--font-sans);
+}
+
+/* Printed-diagram pieces: white is hollow, black is solid.
+   Sides are told apart by fill, never by colour. Black sits on a slate fill —
+   light enough to read as print, with the ink contour carrying the shape. */
+[data-boardid='review-board'] [data-piece^='w'] svg * {
+  fill: var(--piece-face) !important;
+  stroke: var(--ink) !important;
+}
+[data-boardid='review-board'] [data-piece^='b'] svg * {
+  fill: var(--piece-dark) !important;
+  stroke: var(--ink) !important;
+}
+
+/* ----------------------------------------------------------- not found --- */
+
+.notfound {
+  padding: 72px 0;
+  text-align: center;
+}
+.notfound h1 {
+  margin-bottom: 8px;
+}
+
+/* -------------------------------------------------------- reduced motion -- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------- narrow ---- */
+
+@media (max-width: 640px) {
+  main {
+    padding: 18px 16px 56px;
+  }
+  .topbar {
+    padding: 10px 16px;
+    gap: 14px;
+  }
+  .topbar .brand span:last-child,
+  .topbar nav a {
+    font-size: 12.5px;
+  }
+  .engine-status {
+    display: none;
+  }
+  .review-players {
+    font-size: 20px;
+  }
+  .sum-col-label {
+    width: 96px;
+  }
+  .sum-col-mark {
+    width: 32px;
+  }
+  .sum-table th,
+  .sum-table td {
+    padding: 3px 4px;
+  }
+  .sum-name {
+    font-size: 13.5px;
+  }
+  .sum-acc {
+    font-size: 20px;
+  }
+  .sum-phase {
+    padding-left: 4px;
+    padding-right: 2px;
+  }
+  .phase-cell {
+    gap: 6px;
+  }
+  .phase-cell .num {
+    min-width: 33px;
+    font-size: 11px;
+  }
+  .moves-scroll {
+    max-height: 336px;
+  }
+  .depth-slider {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+  .depth-slider input[type='range'] {
+    min-width: 60px;
+  }
+}

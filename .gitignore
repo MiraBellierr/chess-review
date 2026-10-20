@@ -1,0 +1,90 @@
+# Dependencies
+node_modules/
+
+# Local data and databases
+data/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+.npmrc
+.yarnrc
+.yarnrc.yml
+.pypirc
+.netrc
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+
+# Vendor binaries and downloaded assets
+vendor/
+
+# AI assistant and generated design artifacts
+.impeccable/
+.agents/
+.ai/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.opencode/
+.windsurf/
+.continue/
+.codeium/
+.tabnine/
+.aider*
+.mcp/
+.mcp.json
+.cursorrules
+.windsurfrules
+.clinerules
+.continuerules
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+COPILOT.md
+.github/copilot-instructions.md
+.github/prompts/
+.github/chatmodes/
+*.prompt.md
+web/DESIGN.md
+web/PRODUCT.md
+
+# Build output
+web/dist/
+*.tsbuildinfo
+coverage/
+
+# Logs
+*.log
+*.log.*
+logs/
+npm-debug.log*
+yarn-error.log*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+.history/
+*.swp
+*.swo

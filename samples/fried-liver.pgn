@@ -1,0 +1,10 @@
+[Event "Sacrifice test"]
+[Site "Local"]
+[Date "2026.10.18"]
+[Round "-"]
+[White "Attacker"]
+[Black "Defender"]
+[Result "*"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5 d5 5. exd5 Nxd5 6. Nxf7 Kxf7 7. Qf3+
+Ke6 8. Nc3 Nb4 9. a3 *
